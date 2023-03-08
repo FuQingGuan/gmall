@@ -17,6 +17,6 @@ public interface SkuBoundsService extends IService<SkuBoundsEntity> {
 
     PageResultVo queryPage(PageParamVo paramVo);
 
-    void saveSales(SkuSaleVo saleVo);
+    void saveSales(com.atguigu.gmall.sms.vo.SkuSaleVo saleVo);
 }
 
