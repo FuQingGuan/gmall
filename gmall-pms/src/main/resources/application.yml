@@ -9,6 +9,9 @@ spring:
       transport:
         dashboard: 192.168.0.101:8080 # sentinel \u5BA2\u6237\u7AEF\u5730\u5740
         port: 8719 # \u670D\u52A1\u4E0E dashboard \u8FDB\u884C\u4EA4\u4E92\u7684\u7AEF\u53E3
+    alibaba:
+      seata:
+        tx-service-group: gmall_tx_group
   zipkin: # \u94FE\u8DEF\u8FFD\u8E2A\u914D\u7F6E
     base-url: http://192.168.0.101:9411 # zipkin \u5730\u5740
     discovery-client-enabled: false # \u662F\u5426\u76D1\u63A7 zipkin \u672C\u8EAB\u7684\u8BF7\u6C42

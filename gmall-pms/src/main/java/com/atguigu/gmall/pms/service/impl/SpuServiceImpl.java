@@ -23,16 +23,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -177,10 +176,11 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
      * @param spu
      */
 //    @Transactional(propagation = Propagation.REQUIRED) // 事务注解 默认的 传播行为
-    //    @Transactional(rollbackFor = Exception.class) // 所有异常都回滚
+//    @Transactional(rollbackFor = Exception.class) // 所有异常都回滚
 //    @Transactional(noRollbackFor = ArithmeticException.class, rollbackFor = FileNotFoundException.class) // 自定义回滚策略 1 / 0 不会回滚, 文件找不到回滚
 //    @Transactional(readOnly = true) // 只读事务, 该方法只能进行查询 不能做 增删改 操作
-    @Transactional(timeout = 3) // 超时事务
+//    @Transactional(timeout = 3) // 超时事务
+    @GlobalTransactional // 全局事务 TM
     @Override
     public void bigSave(SpuVo spu) {
         // 1. 保存 spu 相关信息
@@ -198,17 +198,20 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
 //        new FileInputStream("xxx"); // 受检异常 默认不会回滚. 抛出该异常 而不是 try catch. try catch, aop 无法监测该异常 事务无法回滚
 
         // 演示超时事务
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            TimeUnit.SECONDS.sleep(3);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         // 1.3 保存 pms_spu_attr_value 基本属性值表(需要使用批量保存使用 service)
         saveBaseAttr(spu, spuId);
 
         // 2. 保存 sku 相关信息
         saveSkuInfo(spu, spuId);
+
+        // 测试全局事务
+//        int i = 1 / 0;
     }
 
     private void saveSkuInfo(SpuVo spu, Long spuId) {
