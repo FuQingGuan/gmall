@@ -2,6 +2,7 @@ package com.atguigu.gmall.search;
 
 import com.atguigu.gmall.common.bean.PageParamVo;
 import com.atguigu.gmall.common.bean.ResponseVo;
+import com.atguigu.gmall.pms.entity.BrandEntity;
 import com.atguigu.gmall.pms.entity.SkuEntity;
 import com.atguigu.gmall.pms.entity.SpuEntity;
 import com.atguigu.gmall.search.feign.GmallPmsClient;
@@ -86,5 +87,14 @@ class GmallSearchApplicationTests {
 
         List<WareSkuEntity> wareSkuEntities = wareSkuResponseVo.getData();
         wareSkuEntities.forEach(System.out::println);
+    }
+
+    // es 数据导入 提供远程接口, 4. 根据 品牌id 查询 品牌
+    @Test
+    public void test4() {
+        ResponseVo<BrandEntity> brandEntityResponseVo = pmsClient.queryBrandById(1L);
+
+        BrandEntity brandEntity = brandEntityResponseVo.getData();
+        System.out.println("brandEntity = " + brandEntity);
     }
 }
