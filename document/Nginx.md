@@ -88,6 +88,28 @@ cd /usr/local/nginx/sbin
 >
 > 需要注意的是，在实际生产环境中，应该根据实际情况来配置Nginx服务器、网关应用、微服务等各个组件的参数，并使用安全通信协议保障数据的传输安全性。同时，在设计路由规则时，也需要考虑到性能、可伸缩性、可维护性等多个方面，以便实现更加高效、稳定和可靠的应用程序。
 
+## 静态资源部署
+
+```shell
+# 动静分离
+server {
+    listen          80; # 监听 80 端口
+    server_name     static.gmall.com; # 服务器地址或绑定域名
+
+    location / { # 访问80端口后的所有路径都转发到 proxy_pass 配置的ip中
+           root /opt/static;
+    }
+}
+```
+
+![](https://oss.yiki.tech/gmall/202303112103070.png)
+
+![](https://oss.yiki.tech/gmall/202303112104285.png)
+
+![](https://oss.yiki.tech/gmall/202303112105996.png)
+
+![](https://oss.yiki.tech/gmall/202303112203842.png)
+
 ## 一些常见问题
 
 > 在排查问题时，可以通过不断尝试不同的方法，逐步缩小问题的范围，最终找到问题所在并解决它。
