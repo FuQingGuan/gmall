@@ -105,7 +105,7 @@ public class CategoryController {
     @PostMapping("/update")
     @ApiOperation("修改")
     public ResponseVo update(@RequestBody CategoryEntity category){
-		categoryService.updateById(category);
+		categoryService.update(category);
 
         return ResponseVo.ok();
     }
@@ -116,7 +116,7 @@ public class CategoryController {
     @PostMapping("/delete")
     @ApiOperation("删除")
     public ResponseVo delete(@RequestBody List<Long> ids){
-		categoryService.removeByIds(ids);
+		categoryService.delete(ids);
 
         return ResponseVo.ok();
     }
