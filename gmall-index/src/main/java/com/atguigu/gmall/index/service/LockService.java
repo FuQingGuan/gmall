@@ -1,5 +1,6 @@
 package com.atguigu.gmall.index.service;
 
+import com.atguigu.gmall.index.utils.DistributedLock;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,6 +23,9 @@ public class LockService {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private DistributedLock distributedLock;
+
     /**
      * 测试. 每次 将 number 值设置为 0 通过 ab 压测工具 ab -n 5000 -c 100 192.168.0.111:8888/index/test/lock 测试高并发下是否出现并发问题(number 未到 5000 即出现并发问题)
      *  ab压测: ab  -n（一次发送的请求数）  -c（请求的并发数） 访问路径
@@ -43,6 +47,46 @@ public class LockService {
      *
      *              不可重入可能会导致死锁
      *                  不可重入导致的死锁是指一个线程已经获取了锁，在没有释放锁的情况下再次请求获取锁会导致死锁。通俗地说，一个线程在持有锁的情况下，再次去获取锁的时候会被自己给阻塞住，这样就无法继续执行，最终导致死锁。
+     *
+     *                  可重入锁: hash Map<lockName, Map<uuid, 重入次数>>
+     *                     可重入加锁
+     *                         1. 判断锁是否存在(exists), 如果不存在(0) 则直接获取锁(hset)
+     *                         2. 判断是否自己的锁(hexists), 如果是(1)则重入(hincrby)
+     *                         3. 否则获取锁失败, 返回 0
+     *
+     *                         if redis.call('exists', KEYS[1]) == 0 or redis.call('hexists', KEYS[1], ARGV[1]) == 1 then redis.call('hincrby', KEYS[1], ARGV[1], 1) redis.call('expire', KEYS[1], ARGV[2]) return 1 else return 0 end
+     *
+     *                         if redis.call('exists', KEYS[1]) == 0 or redis.call('hexists', KEYS[1], ARGV[1]) == 1
+     *                         then
+     *                             redis.call('hincrby', KEYS[1], ARGV[1], 1)
+     *                             redis.call('expire', KEYS[1], ARGV[2])
+     *                             return 1
+     *                         else
+     *                             return 0
+     *                         end
+     *
+     *                         key: lock
+     *                         arg: uuid 30
+     *
+     *                     可重入解锁
+     *                         1.判断自己的锁是否存在（hexists），如果不存在（0）则返回nil
+     *                         2.如果自己的锁存在，则直接减1（hincrby -1），并判断减1后的值是否为0，为0则直接释放锁（del） 返回1
+     *                         3.直接返回0
+     *
+     *                         if redis.call('hexists', KEYS[1], ARGV[1]) == 0 then return nil elseif redis.call('hincrby', KEYS[1], ARGV[1], -1) == 0 then return redis.call('del', KEYS[1]) else return 0 end
+     *
+     *                         if redis.call('hexists', KEYS[1], ARGV[1]) == 0
+     *                         then
+     *                             return nil
+     *                         elseif redis.call('hincrby', KEYS[1], ARGV[1], -1) == 0
+     *                         then
+     *                             return redis.call('del', KEYS[1])
+     *                         else
+     *                             return 0
+     *                         end
+     *
+     *                         key: lock
+     *                         arg: uuid
      *
      *          2. 防误删
      *              如果业务逻辑的执行时间是7s, A 服务获取锁 业务没有执行完 锁3秒被自动释放, B 服务获取到锁 业务没有执行完 锁3秒被自动释放, C 服务获取锁执行业务逻辑.
@@ -67,6 +111,38 @@ public class LockService {
      *              在执行 Lua 脚本期间，Redis 会将脚本转换成一个 Redis 命令，并将其原子地发送到 Redis 服务器执行。在执行过程中，Redis 会禁止其他客户端对相同的 key 进行读写操作，以确保执行脚本期间的原子性。因此，如果多个客户端同时执行相同的 Lua 脚本，只有一个客户端能够成功执行，其他客户端会失败并返回相应的错误信息。这样就保证了原子性。
      */
     public void testLock() {
+        String uuid = UUID.randomUUID().toString();
+        Boolean lock = distributedLock.tryLock("lock", uuid, 30);
+
+        if (lock) {
+            try {
+                // 查询 redis 中的 num 值
+                String number = redisTemplate.opsForValue().get("number");
+                // 没有该值设置默认值
+                if (StringUtils.isBlank(number)) {
+                    redisTemplate.opsForValue().set("number", "1");
+                }
+                // 有值转换成 int
+                int num = Integer.parseInt(number);
+                // 把 redis 中的 num 值 +1
+                redisTemplate.opsForValue().set("number", String.valueOf(++num));
+
+                testSubLock(uuid);
+
+            } finally {
+                distributedLock.unLock("lock", uuid);
+            }
+        }
+    }
+
+    public void testSubLock(String uuid) {
+        distributedLock.tryLock("lock", uuid, 30);
+        System.out.println("==========================");
+        distributedLock.unLock("lock", uuid);
+    }
+
+
+    public void testLock2() {
 
         String uuid = UUID.randomUUID().toString();
 
