@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -191,17 +190,20 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         // spuInfo 与 spuDesc 保存成功, 后面方法不执行
 //        new FileInputStream("xxx"); // 受检异常 默认不会回滚. 抛出该异常 而不是 try catch. try catch, aop 无法监测该异常 事务无法回滚
 
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            TimeUnit.SECONDS.sleep(3);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         // 1.3 保存 pms_spu_attr_value 基本属性值表(需要使用批量保存使用 service)
         saveBaseAttr(spu, spuId);
 
         // 2. 保存 sku 相关信息
         saveSkuInfo(spu, spuId);
+
+        // 测试分布式事务. 当此处发生异常 或者 营销系统异常 都会导致分布式事务问题. 当此处发生异常，商品服务会进行回滚 而营销系统则不会。反之 营销系统进行回滚 商品服务不会回滚
+        int i = 1 / 0;
     }
 
     /**
