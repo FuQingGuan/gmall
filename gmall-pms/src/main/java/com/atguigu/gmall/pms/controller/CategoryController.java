@@ -1,23 +1,21 @@
 package com.atguigu.gmall.pms.controller;
 
-import java.util.List;
-
+import com.atguigu.gmall.common.bean.PageParamVo;
+import com.atguigu.gmall.common.bean.PageResultVo;
+import com.atguigu.gmall.common.bean.ResponseVo;
+import com.atguigu.gmall.pms.entity.CategoryEntity;
+import com.atguigu.gmall.pms.service.CategoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.atguigu.gmall.pms.entity.CategoryEntity;
-import com.atguigu.gmall.pms.service.CategoryService;
-import com.atguigu.gmall.common.bean.PageResultVo;
-import com.atguigu.gmall.common.bean.ResponseVo;
-import com.atguigu.gmall.common.bean.PageParamVo;
+import java.util.List;
 
 /**
  * 商品三级分类
@@ -33,6 +31,24 @@ public class CategoryController {
 
     @Autowired
     private CategoryService categoryService;
+
+    /**
+     * baseCrud: 1. 根据父分类的 id 查询相应的子分类
+     *      为什么页面设计的是树状结构 而 不是表格
+     *          存在很多分类，但表格展示不够清晰。如果有两个商品归属不同的分类，但分类名称相同，会让人混淆。例如，手机、电脑和家电等商品都有配件，但在展示表格中很难分清属于哪个商品的配件。因此，应该采用树形结构进行展示。
+     *
+     *      请求路径
+     *          http://api.gmall.com/pms/category/parent/-1
+     *                              /pms/category/parent/{parentId}
+     * @param pid
+     * @return
+     */
+    @GetMapping("parent/{parentId}")
+    public ResponseVo<List<CategoryEntity>> queryCategoriesByPid(@PathVariable("parentId") Long pid) {
+        List<CategoryEntity> categoryEntities = categoryService.queryCategoriesByPid(pid);
+
+        return ResponseVo.ok(categoryEntities);
+    }
 
     /**
      * 列表
