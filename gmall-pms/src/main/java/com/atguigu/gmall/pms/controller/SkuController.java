@@ -5,6 +5,7 @@ import com.atguigu.gmall.common.bean.PageResultVo;
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.pms.entity.SkuEntity;
 import com.atguigu.gmall.pms.service.SkuService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,26 @@ public class SkuController {
 
     @Autowired
     private SkuService skuService;
+
+    /**
+     * baseCrud: 5. 根据 spuId 查询 spu 下 所有 sku 信息
+     *
+     * 　请求路径
+     * 　　　　http://api.gmall.com/pms/sku/spu/7
+     * 　　　　　　　　　　　　　　　　/pms/spu/spu/{spuId}
+     * @param spuId
+     * @return
+     */
+    @GetMapping("/spu/{spuId}")
+    public ResponseVo<List<SkuEntity>> querySkuBySpuId(@PathVariable("spuId") Long spuId) {
+        // select * from pms_sku where spu_id = spuId;
+        List<SkuEntity> skuEntities = skuService.list(
+                new LambdaQueryWrapper<SkuEntity>()
+                        .eq(SkuEntity::getSpuId, spuId)
+        );
+
+        return ResponseVo.ok(skuEntities);
+    }
 
     /**
      * 列表
