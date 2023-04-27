@@ -28,6 +28,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -126,6 +128,32 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         return new PageResultVo(page);
     }
 
+    /**
+     * 事务的传播行为 @Transactional(propagation = Propagation.REQUIRES) 默认
+     *      一个 sevice 的方法 调用 另一个 service 的方法时 事务之间的影响 spring 特有
+     *
+     *      支持当前事务
+     *          REQUIRED    支持当前事务，如果不存在，就新建一个
+     *          SUPPORTS    支持当前事务，如果不存在，就不使用事务
+     *          MANDATORY   支持当前事务，如果不存在，抛出异常
+     *
+     *      不支持当前事务(挂起当前事务)
+     *          REQUIRES_NEW    如果有事务存在，挂起当前事务，创建一个新的事务
+     *          NOT_SUPPORTED   以非事务方式运行，如果有事务存在，挂起当前事务
+     *          NEVER           以非事务方式运行，如果有事务存在，抛出异常
+     *
+     *      嵌套事务
+     *          NESTED  如果当前事务存在，则嵌套事务执行（嵌套式事务）
+     *              依赖于JDBC3.0提供的SavePoint技术(保存点)
+     *              保存点不好控制所以不使用
+     *
+     *      常用的两种
+     *          REQUIRED：一个事务，要么成功，要么失败
+     *          REQUIRES_NEW：两个不同事务，彼此之间没有关系。一个事务失败了不影响另一个事务
+     *
+     * @param spu
+     */
+    @Transactional(propagation = Propagation.REQUIRED) // 事务注解 默认的 传播行为
     @Override
     public void bigSave(SpuVo spu) {
         // 1. 保存 spu 相关信息
@@ -133,7 +161,9 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         Long spuId = saveSpuInfo(spu);
 
         // 1.2 保存 pms_spu_desc 本质与 spu 是同一张表(不需要批量新增使用 mapper 即可)
-        saveSpuDesc(spu, spuId);
+        saveSpuDesc(spu, spuId); // 编译时 默认会添加 this 关键字. 实现类自己调用自己的方法没有 通过代理 也就没有增强. 方法在自己类时 通过this 调用没有通过代理类调用, 事务注解没有生效, 传播行为更不可能生效
+
+        int i = 1 / 0;
 
         // 1.3 保存 pms_spu_attr_value 基本属性值表(需要使用批量保存使用 service)
         saveBaseAttr(spu, spuId);
@@ -247,10 +277,28 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
 
     /**
      * 1.2 保存 pms_spu_desc 本质与 spu 是同一张表(不需要批量新增使用 mapper 即可)
+     *
+     * 此处想演示的是, 当 saveSpuDesc 方法下出现异常时 saveSpuInfo 保存进行回滚, saveSpuDesc 开启新的事物 保存成功
+     * 　　Transactional 默认的传播行为 REQUIRES 支持当前事务，如果不存在，就新建一个.
+     * 　　　　　　　　　　　需要手动设置　REQUIRES_NEW 如果有事务存在，挂起当前事务，创建一个新的事务.
+     *
+     * 测试:
+     *      1. saveSpuDesc 方法下人为制作异常
+     *      2. saveSpuDesc 保存成功不进行回滚 添加 REQUIRES_NEW 属性. 因为 private 不能被 增强 所以修改为 public
+     *          Transactional 是基于 aop 的, aop 需要对一个方法进行增强. 私有方法在外面无法被获取到, 切面类无法对该方法进行增强
+     *      3. jdk 代理(默认) 基于 接口代理.接口中没有该方法无法进行增强, 所以 SpuService 扩展该方法
+     *
+     * 结果:
+     *      数据仍然进行回滚
+     *
+     * 原因: 事物的传播行为是(一个 sevice 的方法 调用 另一个 service 的方法时 事务之间的影响 spirng 特有)
+     *      想要做到 saveBaseAttr 方法事物传播行为生效. 应该将方法放入 另一个 service 中. 在此处相当于 类调用方法 不是通过代理类调用. 事物注解没有生效, 传播行为更不可能生效
+     *
      * @param spu
      * @param spuId
      */
-    private void saveSpuDesc(SpuVo spu, Long spuId) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveSpuDesc(SpuVo spu, Long spuId) {
         List<String> spuImages = spu.getSpuImages();
         // spuImages 不为空才进行保存 spu 信息介绍表
         if (CollectionUtils.isNotEmpty(spuImages)) {

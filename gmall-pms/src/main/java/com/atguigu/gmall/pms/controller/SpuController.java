@@ -30,6 +30,8 @@ import java.util.List;
 @RequestMapping("pms/spu")
 public class SpuController {
 
+    // 在 Spring 中通过 @Autowired 注入的都是代理类对象, 因为通过代理类调用方法 事务注解才会生效
+    // 注意在 Spring 中默认是 JDK 代理。 但是 Spring Boot 2.x 以及之后都是 CGLiB 代理 更加通用
     @Autowired
     private SpuService spuService;
 
@@ -86,6 +88,7 @@ public class SpuController {
     @PostMapping
     @ApiOperation("保存")
     public ResponseVo<Object> save(@RequestBody SpuVo spu){
+        // 大保存方法是通过 代理类调用的 进而 bigSave 方法 事务注解才能生效, 方法前后添加事务代码(回滚 提交)
 		spuService.bigSave(spu);
 
         return ResponseVo.ok();
