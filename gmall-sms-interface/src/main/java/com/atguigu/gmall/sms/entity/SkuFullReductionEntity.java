@@ -2,21 +2,21 @@ package com.atguigu.gmall.sms.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+
 /**
- * 秒杀商品通知订阅
+ * 商品满减信息
  * 
  * @author Guan FuQing
  * @email moumouguan@gmail.com
  * @date 2023-04-26 20:12:31
  */
 @Data
-@TableName("sms_seckill_sku_notice")
-public class SeckillSkuNoticeEntity implements Serializable {
+@TableName("sms_sku_full_reduction")
+public class SkuFullReductionEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -25,28 +25,20 @@ public class SeckillSkuNoticeEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * member_id
-	 */
-	private Long memberId;
-	/**
-	 * sku_id
+	 * spu_id
 	 */
 	private Long skuId;
 	/**
-	 * 活动场次id
+	 * 满多少
 	 */
-	private Long sessionId;
+	private BigDecimal fullPrice;
 	/**
-	 * 订阅时间
+	 * 减多少
 	 */
-	private Date subcribeTime;
+	private BigDecimal reducePrice;
 	/**
-	 * 发送时间
+	 * 是否参与其他优惠
 	 */
-	private Date sendTime;
-	/**
-	 * 通知方式[0-短信，1-邮件]
-	 */
-	private Integer noticeType;
+	private Integer addOther;
 
 }

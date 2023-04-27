@@ -2,21 +2,21 @@ package com.atguigu.gmall.sms.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
- * 秒杀活动
+ * 秒杀活动场次
  * 
  * @author Guan FuQing
  * @email moumouguan@gmail.com
  * @date 2023-04-26 20:12:30
  */
 @Data
-@TableName("sms_seckill_promotion")
-public class SeckillPromotionEntity implements Serializable {
+@TableName("sms_seckill_session")
+public class SeckillSessionEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -25,28 +25,24 @@ public class SeckillPromotionEntity implements Serializable {
 	@TableId
 	private Long id;
 	/**
-	 * 活动标题
+	 * 场次名称
 	 */
-	private String title;
+	private String name;
 	/**
-	 * 开始日期
+	 * 每日开始时间
 	 */
 	private Date startTime;
 	/**
-	 * 结束日期
+	 * 每日结束时间
 	 */
 	private Date endTime;
 	/**
-	 * 上下线状态
+	 * 启用状态
 	 */
 	private Integer status;
 	/**
 	 * 创建时间
 	 */
 	private Date createTime;
-	/**
-	 * 创建人
-	 */
-	private Long userId;
 
 }
