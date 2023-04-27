@@ -1,23 +1,22 @@
 package com.atguigu.gmall.pms.controller;
 
-import java.util.List;
-
+import com.atguigu.gmall.common.bean.PageParamVo;
+import com.atguigu.gmall.common.bean.PageResultVo;
+import com.atguigu.gmall.common.bean.ResponseVo;
+import com.atguigu.gmall.pms.entity.AttrGroupEntity;
+import com.atguigu.gmall.pms.service.AttrGroupService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.atguigu.gmall.pms.entity.AttrGroupEntity;
-import com.atguigu.gmall.pms.service.AttrGroupService;
-import com.atguigu.gmall.common.bean.PageResultVo;
-import com.atguigu.gmall.common.bean.ResponseVo;
-import com.atguigu.gmall.common.bean.PageParamVo;
+import java.util.List;
 
 /**
  * 属性分组
@@ -33,6 +32,26 @@ public class AttrGroupController {
 
     @Autowired
     private AttrGroupService attrGroupService;
+
+    /**
+     * baseCrud: 2. 根据分类 id 查询属性规格分组
+     *
+     *      请求路径
+     *          http://api.gmall.com/pms/attrgroup/category/225
+     *                              /pms/attrgroup/category/{cid}
+     * @param cid
+     * @return
+     */
+    @GetMapping("/category/{cid}")
+    public ResponseVo<List<AttrGroupEntity>> queryGroupsByCid(@PathVariable("cid") Long cid) {
+        // select * from pms_attr_group where category_id = cid;
+        List<AttrGroupEntity> attrGroupEntities = attrGroupService.list(
+                new LambdaQueryWrapper<AttrGroupEntity>()
+                        .eq(AttrGroupEntity::getCategoryId, cid)
+        );
+
+        return ResponseVo.ok(attrGroupEntities);
+    }
 
     /**
      * 列表
