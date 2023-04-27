@@ -23,11 +23,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.seata.spring.annotation.GlobalTransactional;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -175,7 +175,8 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
 //    @Transactional(rollbackFor = Exception.class) // 所有异常都回滚
 //    @Transactional(noRollbackFor = ArithmeticException.class, rollbackFor = FileNotFoundException.class) // 自定义回滚策略 1 / 0 不会 回滚, 文件找不到 回滚
 //    @Transactional(readOnly = true) // 只读事务, 该方法只能进行查询 不能做 增删改 操作
-    @Transactional(timeout = 3) // 超时事务, 是指第一个sql开始执行到最后一个sql结束执行之间的间隔时间。
+//    @Transactional(timeout = 3) // 超时事务, 是指第一个sql开始执行到最后一个sql结束执行之间的间隔时间。
+    @GlobalTransactional
     @Override
     public void bigSave(SpuVo spu) {
         // 1. 保存 spu 相关信息
@@ -203,7 +204,7 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         saveSkuInfo(spu, spuId);
 
         // 测试分布式事务. 当此处发生异常 或者 营销系统异常 都会导致分布式事务问题. 当此处发生异常，商品服务会进行回滚 而营销系统则不会。反之 营销系统进行回滚 商品服务不会回滚
-        int i = 1 / 0;
+//        int i = 1 / 0;
     }
 
     /**
