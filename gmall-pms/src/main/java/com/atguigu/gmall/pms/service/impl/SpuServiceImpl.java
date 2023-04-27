@@ -6,15 +6,14 @@ import com.atguigu.gmall.common.bean.PageResultVo;
 import com.atguigu.gmall.pms.entity.SkuAttrValueEntity;
 import com.atguigu.gmall.pms.entity.SkuImagesEntity;
 import com.atguigu.gmall.pms.entity.SpuAttrValueEntity;
-import com.atguigu.gmall.pms.entity.SpuDescEntity;
 import com.atguigu.gmall.pms.entity.SpuEntity;
 import com.atguigu.gmall.pms.feign.GmallSmsClient;
 import com.atguigu.gmall.pms.mapper.SkuMapper;
-import com.atguigu.gmall.pms.mapper.SpuDescMapper;
 import com.atguigu.gmall.pms.mapper.SpuMapper;
 import com.atguigu.gmall.pms.service.SkuAttrValueService;
 import com.atguigu.gmall.pms.service.SkuImagesService;
 import com.atguigu.gmall.pms.service.SpuAttrValueService;
+import com.atguigu.gmall.pms.service.SpuDescService;
 import com.atguigu.gmall.pms.service.SpuService;
 import com.atguigu.gmall.pms.vo.SkuVo;
 import com.atguigu.gmall.pms.vo.SpuAttrValueVo;
@@ -40,8 +39,11 @@ import java.util.stream.Collectors;
 @Service("spuService")
 public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements SpuService {
 
+    // 在 Spring 中通过 @Autowired 注入的都是代理类对象, 因为通过代理类调用方法 事务注解才会生效
+    // 注意在 Spring 中默认是 JDK 代理。 但是 Spring Boot 2.x 以及之后都是 CGLiB 代理 更加通用
     @Autowired
-    private SpuDescMapper descMapper; // 1.2 保存 pms_spu_desc 本质与 spu 是同一张表
+//    private SpuDescMapper descMapper; // 1.2 保存 pms_spu_desc 本质与 spu 是同一张表
+    private SpuDescService descService; // 1.2 保存 pms_spu_desc 本质与 spu 是同一张表
 
     @Autowired
     private SpuAttrValueService baseAttrService; // 1.3 保存 pms_spu_attr_value 基本属性值表
@@ -161,7 +163,8 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
         Long spuId = saveSpuInfo(spu);
 
         // 1.2 保存 pms_spu_desc 本质与 spu 是同一张表(不需要批量新增使用 mapper 即可)
-        saveSpuDesc(spu, spuId); // 编译时 默认会添加 this 关键字. 实现类自己调用自己的方法没有 通过代理 也就没有增强. 方法在自己类时 通过this 调用没有通过代理类调用, 事务注解没有生效, 传播行为更不可能生效
+//        saveSpuDesc(spu, spuId); // 编译时 默认会添加 this 关键字. 实现类自己调用自己的方法没有 通过代理 也就没有增强. 方法在自己类时 通过this 调用没有通过代理类调用, 事务注解没有生效, 传播行为更不可能生效
+        descService.saveSpuDesc(spu, spuId); // 通过代理类调用才会有增强, 进而事物注解才能生效 传播行为才生效
 
         int i = 1 / 0;
 
@@ -297,19 +300,19 @@ public class SpuServiceImpl extends ServiceImpl<SpuMapper, SpuEntity> implements
      * @param spu
      * @param spuId
      */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void saveSpuDesc(SpuVo spu, Long spuId) {
-        List<String> spuImages = spu.getSpuImages();
-        // spuImages 不为空才进行保存 spu 信息介绍表
-        if (CollectionUtils.isNotEmpty(spuImages)) {
-            SpuDescEntity spuDescEntity = new SpuDescEntity();
-            // 本质与 spu 是同一张表, 没有自己的 Id 需要 设置 spuId
-            spuDescEntity.setSpuId(spuId); // 设置图片 id
-            // 将集合以 "," 拼接符 拼接到一起形成新的 字符串
-            spuDescEntity.setDecript(StringUtils.join(spuImages, ",")); // ["1", "2"] -> "1,2"
-            descMapper.insert(spuDescEntity);
-        }
-    }
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
+//    public void saveSpuDesc(SpuVo spu, Long spuId) {
+//        List<String> spuImages = spu.getSpuImages();
+//        // spuImages 不为空才进行保存 spu 信息介绍表
+//        if (CollectionUtils.isNotEmpty(spuImages)) {
+//            SpuDescEntity spuDescEntity = new SpuDescEntity();
+//            // 本质与 spu 是同一张表, 没有自己的 Id 需要 设置 spuId
+//            spuDescEntity.setSpuId(spuId); // 设置图片 id
+//            // 将集合以 "," 拼接符 拼接到一起形成新的 字符串
+//            spuDescEntity.setDecript(StringUtils.join(spuImages, ",")); // ["1", "2"] -> "1,2"
+//            descMapper.insert(spuDescEntity);
+//        }
+//    }
 
     /**
      * 1.1 保存 spu 表
