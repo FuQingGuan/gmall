@@ -1,7 +1,7 @@
 package com.atguigu.gmall.pms.vo;
 
-import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.atguigu.gmall.pms.entity.SpuAttrValueEntity;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
