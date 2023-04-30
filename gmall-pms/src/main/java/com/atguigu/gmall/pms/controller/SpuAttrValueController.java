@@ -35,6 +35,22 @@ public class SpuAttrValueController {
     private SpuAttrValueService spuAttrValueService;
 
     /**
+     * es 数据导入 提供远程接口, 7. 查询 基本类型的检索属性和值
+     *      select * from pms_attr where category_id = 225 AND search_type = 1;
+     *      select * from pms_spu_attr_value where spu_id = 13 AND attr_id in (4,5,6,8,9);
+     * @return
+     */
+    @GetMapping("search/attr/value/{cid}")
+    public ResponseVo<List<SpuAttrValueEntity>> querySearchAttrValueByCidAndSpuId(
+            @PathVariable("cid") Long cid,
+            @RequestParam("spuId") Long spuId
+    ) {
+        List<SpuAttrValueEntity> spuAttrValueEntities = spuAttrValueService.querySearchAttrValueByCidAndSpuId(cid, spuId);
+
+        return ResponseVo.ok(spuAttrValueEntities);
+    }
+
+    /**
      * 列表
      */
     @GetMapping
