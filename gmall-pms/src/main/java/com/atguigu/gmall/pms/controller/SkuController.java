@@ -35,6 +35,7 @@ public class SkuController {
 
     /**
      * baseCrud: 5. 根据 spuId 查询 spu 下 所有 sku 信息
+     * es 数据导入 提供远程接口, 2. 根据 spuId 查询 sku
      *
      * 　请求路径
      * 　　　　http://api.gmall.com/pms/sku/spu/7
