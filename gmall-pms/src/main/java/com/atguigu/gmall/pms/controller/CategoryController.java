@@ -64,6 +64,7 @@ public class CategoryController {
 
     /**
      * 信息
+     * es 数据导入 提供远程接口, 5. 根据 分类id 查询 分类
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
