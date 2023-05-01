@@ -1,33 +1,38 @@
 server:
-  port: 8888 # \u670D\u52A1\u7AEF\u53E3
+  port: 8888 # 服务端口
 spring:
   cloud:
-    nacos: # \u6CE8\u518C\u4E2D\u5FC3\u914D\u7F6E
+    nacos: # 注册中心配置
       discovery:
-        server-addr: 192.168.0.101:8848 # \u6CE8\u518C\u4E2D\u5FC3\u5730\u5740
-    gateway: # \u7F51\u5173
-      routes: # \u8DEF\u7531
-        - id: pms-route # \u8DEF\u7531\u552F\u4E00\u6807\u8BC6, \u5546\u54C1\u7BA1\u7406\u8DEF\u7531
-          uri: lb://pms-service # \u8DEF\u7531\u5230\u90A3\u91CC, \u8DEF\u7531\u5230\u670D\u52A1\u540D\u5BF9\u5E94\u7684\u670D\u52A1
-          predicates: # \u65AD\u8A00
-            - Path=/pms/** # \u4EC0\u4E48\u6837\u7684\u8BF7\u6C42\u5230\u6B64\u8DEF\u7531 \u8FDB\u800C\u8FDB\u5165\u8DEF\u7531\u8BE5\u670D\u52A1. pms \u5F00\u5934\u7684\u8BF7\u6C42 \u90FD \u8DEF\u7531\u5230 pms-service \u670D\u52A1
+        server-addr: 192.168.0.101:8848 # 注册中心地址
+    gateway: # 网关
+      routes: # 路由
+        - id: pms-route # 路由唯一标识, 商品管理路由
+          uri: lb://pms-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/pms/** # 什么样的请求到此路由 进而进入路由该服务. pms 开头的请求 都 路由到 pms-service 服务
 
-        - id: ums-route # \u8DEF\u7531\u552F\u4E00\u6807\u8BC6, \u7528\u6237\u7BA1\u7406\u8DEF\u7531
-          uri: lb://ums-service # \u8DEF\u7531\u5230\u90A3\u91CC, \u8DEF\u7531\u5230\u670D\u52A1\u540D\u5BF9\u5E94\u7684\u670D\u52A1
-          predicates: # \u65AD\u8A00
-            - Path=/ums/** # \u4EC0\u4E48\u6837\u7684\u8BF7\u6C42\u5230\u6B64\u8DEF\u7531 \u8FDB\u800C\u8FDB\u5165\u8DEF\u7531\u8BE5\u670D\u52A1. ums \u5F00\u5934\u7684\u8BF7\u6C42 \u90FD \u8DEF\u7531\u5230 ums-service \u670D\u52A1
+        - id: ums-route # 路由唯一标识, 用户管理路由
+          uri: lb://ums-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/ums/** # 什么样的请求到此路由 进而进入路由该服务. ums 开头的请求 都 路由到 ums-service 服务
 
-        - id: wms-route # \u8DEF\u7531\u552F\u4E00\u6807\u8BC6, \u4ED3\u5E93\u7BA1\u7406\u8DEF\u7531
-          uri: lb://wms-service # \u8DEF\u7531\u5230\u90A3\u91CC, \u8DEF\u7531\u5230\u670D\u52A1\u540D\u5BF9\u5E94\u7684\u670D\u52A1
-          predicates: # \u65AD\u8A00
-            - Path=/wms/** # \u4EC0\u4E48\u6837\u7684\u8BF7\u6C42\u5230\u6B64\u8DEF\u7531 \u8FDB\u800C\u8FDB\u5165\u8DEF\u7531\u8BE5\u670D\u52A1. wms \u5F00\u5934\u7684\u8BF7\u6C42 \u90FD \u8DEF\u7531\u5230 wms-service \u670D\u52A1
+        - id: wms-route # 路由唯一标识, 仓库管理路由
+          uri: lb://wms-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/wms/** # 什么样的请求到此路由 进而进入路由该服务. wms 开头的请求 都 路由到 wms-service 服务
 
-        - id: oms-route # \u8DEF\u7531\u552F\u4E00\u6807\u8BC6, \u8BA2\u5355\u7BA1\u7406\u8DEF\u7531
-          uri: lb://oms-service # \u8DEF\u7531\u5230\u90A3\u91CC, \u8DEF\u7531\u5230\u670D\u52A1\u540D\u5BF9\u5E94\u7684\u670D\u52A1
-          predicates: # \u65AD\u8A00
-            - Path=/oms/** # \u4EC0\u4E48\u6837\u7684\u8BF7\u6C42\u5230\u6B64\u8DEF\u7531 \u8FDB\u800C\u8FDB\u5165\u8DEF\u7531\u8BE5\u670D\u52A1. oms \u5F00\u5934\u7684\u8BF7\u6C42 \u90FD \u8DEF\u7531\u5230 oms-service \u670D\u52A1
+        - id: oms-route # 路由唯一标识, 订单管理路由
+          uri: lb://oms-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/oms/** # 什么样的请求到此路由 进而进入路由该服务. oms 开头的请求 都 路由到 oms-service 服务
 
-        - id: sms-route # \u8DEF\u7531\u552F\u4E00\u6807\u8BC6, \u8425\u9500\u7BA1\u7406\u8DEF\u7531
-          uri: lb://sms-service # \u8DEF\u7531\u5230\u90A3\u91CC, \u8DEF\u7531\u5230\u670D\u52A1\u540D\u5BF9\u5E94\u7684\u670D\u52A1
-          predicates: # \u65AD\u8A00
-            - Path=/sms/** # \u4EC0\u4E48\u6837\u7684\u8BF7\u6C42\u5230\u6B64\u8DEF\u7531 \u8FDB\u800C\u8FDB\u5165\u8DEF\u7531\u8BE5\u670D\u52A1. sms \u5F00\u5934\u7684\u8BF7\u6C42 \u90FD \u8DEF\u7531\u5230 sms-service \u670D\u52A1
+        - id: sms-route # 路由唯一标识, 营销管理路由
+          uri: lb://sms-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/sms/** # 什么样的请求到此路由 进而进入路由该服务. sms 开头的请求 都 路由到 sms-service 服务
+
+        - id: search-route # 路由唯一标识, 搜索工程路由
+          uri: lb://search-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/search # 什么样的请求到此路由 进而进入路由该服务. search 开头的请求 都 路由到 search-service 服务
