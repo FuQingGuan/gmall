@@ -2,6 +2,7 @@ package com.atguigu.gmall.index.controller;
 
 import com.atguigu.gmall.common.bean.ResponseVo;
 import com.atguigu.gmall.index.service.IndexService;
+import com.atguigu.gmall.index.service.LockService;
 import com.atguigu.gmall.pms.entity.CategoryEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,6 +24,9 @@ public class IndexController {
 
     @Autowired
     private IndexService indexService;
+
+    @Autowired
+    private LockService lockService;
 
     /**
      * 加载分类应该调用 service 访问远程接口加载数据
@@ -60,5 +64,13 @@ public class IndexController {
         List<CategoryEntity> categoryEntityList = indexService.queryLvl23CategoriesByPid(pid);
 
         return ResponseVo.ok(categoryEntityList);
+    }
+
+    @GetMapping("index/test/lock")
+    @ResponseBody
+    public ResponseVo testLock() {
+        lockService.testLock();
+
+        return ResponseVo.ok();
     }
 }
