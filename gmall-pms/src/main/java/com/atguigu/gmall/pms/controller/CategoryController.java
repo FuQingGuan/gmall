@@ -33,6 +33,18 @@ public class CategoryController {
     private CategoryService categoryService;
 
     /**
+     * 根据 一级分类 id 查询 级分类以及二级分类下的三级分类
+     * @param pid
+     * @return
+     */
+    @GetMapping("/level23/{pid}")
+    public ResponseVo<List<CategoryEntity>> queryLevel23CategoriesByPid(@PathVariable("pid") Long pid) {
+        List<CategoryEntity> categoryEntities = categoryService.queryLevel23CategoriesByPid(pid);
+
+        return ResponseVo.ok(categoryEntities);
+    }
+
+    /**
      * baseCrud: 1. 根据父分类的 id 查询相应的子分类
      * index 加载一级分类
      *      为什么页面设计的是树状结构 而 不是表格
