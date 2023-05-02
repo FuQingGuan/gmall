@@ -89,6 +89,7 @@ public class SpuController {
 
     /**
      * 信息
+     * es 数据同步, 根据 spuId 查询 spu
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
