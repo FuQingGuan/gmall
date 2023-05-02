@@ -27,18 +27,40 @@ public class LockService {
      *          最终 number 值为 5000, 要注意的是 这只是单机工程
      *      4. copy 2 份实例 将 number 设置为 0 压测 5000
      *          最终 number 值为 1928, 出现并发性问题. 理论值在 5000 / 3 至 5000(极限情况下 3 台服务同时放入一个线程 同时到达 都将 num 转换为某一个数字 ++.)
+     *
+     * 基于 redis 实现分布式锁。借助于 setnx 指令 当 key 不存在即设置成功返回 1 当 key 存在即设置失败返回 0(加锁 解锁 重试)
+     *      分布式锁特征: 独占排他互斥使用
      */
-    public synchronized void testLock() {
+    public void testLock() {
+        /**
+         * 加锁 setIfAbsent 类似与 setNx 当 key 不存在即设置成功 否 则 失败
+         *      分布式锁本质就是对 key 的争抢, 谁先设置成功谁就先获取锁
+         */
+        Boolean flag = redisTemplate.opsForValue().setIfAbsent("lock", "lock");
 
-        String number = redisTemplate.opsForValue().get("number");
+        if (!flag) {
+            // 加锁失败, 进行递归调用进行重试
+            try {
+                // 睡眠一段时间(如果不设置睡眠不停的重试也可能会导致栈内存溢出) 模拟让抢到锁的线程执行业务逻辑 减少竞争
+                Thread.sleep(30);
+                // 设置锁(加锁)失败重新调用该方法进行重试
+                testLock();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } else {
+            String number = redisTemplate.opsForValue().get("number");
 
-        if (StringUtils.isBlank(number)) {
-            redisTemplate.opsForValue().set("number", "1");
+            if (StringUtils.isBlank(number)) {
+                redisTemplate.opsForValue().set("number", "1");
+            }
+
+            int num = Integer.parseInt(number);
+
+            redisTemplate.opsForValue().set("number", String.valueOf(++num));
+
+            // 释放锁
+            redisTemplate.delete("lock");
         }
-
-        int num = Integer.parseInt(number);
-
-        redisTemplate.opsForValue().set("number", String.valueOf(++num));
-
     }
 }
