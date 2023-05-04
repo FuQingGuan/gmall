@@ -1,5 +1,6 @@
 package com.atguigu.gmall.index.service;
 
+import com.atguigu.gmall.index.utils.DistributedLock;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -21,6 +22,9 @@ public class LockService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private DistributedLock distributedLock;
 
     /**
      * 测试. 每次 将 number 值设置为 0 通过 ab 压测工具 ab -n 5000 -c 100 192.168.0.111:8888/index/test/lock 测试高并发下是否出现并发问题(number 未到 5000 即出现并发问题)
@@ -50,6 +54,10 @@ public class LockService {
      *                         1. 判断锁是否存在(exists), 如果不存在(0) 则直接获取锁(hset)
      *                         2. 判断是否自己的锁(hexists), 如果是(1)则重入(hincrby)
      *                         3. 否则获取锁失败, 返回 0
+     *                     可重入解锁
+     *                         1. 判断自己的锁是否存在（hexists），如果不存在（0）则返回nil
+     *                         2. 如果自己的锁存在，则直接减1（hincrby -1），并判断减1后的值是否为0，为0则直接释放锁（del） 返回1
+     *                         3. 直接返回 0, 表示出一次
      *
      *          2. 防误删
      *              如果业务逻辑的执行时间是7s, A 服务获取锁 业务没有执行完 锁3秒被自动释放, B 服务获取到锁 业务没有执行完 锁3秒被自动释放, C 服务获取锁执行业务逻辑.

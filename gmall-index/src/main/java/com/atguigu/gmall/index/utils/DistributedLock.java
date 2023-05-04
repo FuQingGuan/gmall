@@ -1,5 +1,6 @@
 package com.atguigu.gmall.index.utils;
 
+import com.google.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -41,10 +42,10 @@ public class DistributedLock {
      * @return
      */
     public Boolean tryLock(String lockName, String uuid, Integer expire) {
-        String script = "if redis.call('exists', KEYS[1]) == 0 or redis.call('hexists', KEYS[1], ARGV[1]) == 1" +
-                "then" +
-                "   redis.call('hincrby', KEYS[1], ARGV[1], 1)" +
-                "   redis.call('expire', KEYS[1], ARGV[2])" +
+        String script = "if redis.call('exists', KEYS[1]) == 0 or redis.call('hexists', KEYS[1], ARGV[1]) == 1 " +
+                "then " +
+                "   redis.call('hincrby', KEYS[1], ARGV[1], 1) " +
+                "   redis.call('expire', KEYS[1], ARGV[2]) " +
                 "   return 1 " +
                 "else " +
                 "   return 0 " +
@@ -74,4 +75,47 @@ public class DistributedLock {
         return true;
     }
 
+    /**
+     * 可重入 解锁
+     *     实现思路
+     *          判断自己的锁是否存在（hexists），如果不存在（0）则返回nil
+     *          如果自己的锁存在，则直接减1（hincrby -1），并判断减1后的值是否为0，为0则直接释放锁（del） 返回1
+     *          直接返回 0, 表示出一次
+     *
+     *      if redis.call('hexists', KEYS[1], ARGV[1]) == 0
+     *      then
+     *          return nil
+     *      elseif redis.call('hincrby', KEYS[1], ARGV[1], -1) == 0
+     *      then
+     *          return redis.call('del', KEYS[1])
+     *      else
+     *          return 0
+     *      end
+     *
+     * @param lockName 锁名称
+     * @param uuid 锁的唯一标识
+     */
+    public void unLock(String lockName, String uuid) {
+        String script = "if redis.call('hexists', KEYS[1], ARGV[1]) == 0 " +
+                "then " +
+                "   return nil " +
+                "elseif redis.call('hincrby', KEYS[1], ARGV[1], -1) == 0 " +
+                "then " +
+                "  return redis.call('del', KEYS[1]) " +
+                "else " +
+                "  return 0 " +
+                "end";
+
+        /**
+         * 这里之所以没有跟加锁一样使用 Boolean ,这是因为解锁 lua 脚本中，三个返回值含义如下：
+         *      1 代表解锁成功，锁被释放
+         *      0 代表可重入次数被减 1
+         *      null 代表其他线程尝试解锁，解锁失败
+         */
+        Long result = redisTemplate.execute(new DefaultRedisScript<>(script, Long.class), Lists.newArrayList(lockName), uuid);
+        // 如果未返回值，代表尝试解其他线程的锁
+        if (result == null) {
+            throw new IllegalMonitorStateException("你释放的锁不属于你!");
+        }
+    }
 }
