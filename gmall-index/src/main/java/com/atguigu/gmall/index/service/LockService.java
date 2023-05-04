@@ -82,6 +82,38 @@ public class LockService {
      *              在执行 Lua 脚本期间，Redis 会将脚本转换成一个 Redis 命令，并将其原子地发送到 Redis 服务器执行。在执行过程中，Redis 会禁止其他客户端对相同的 key 进行读写操作，以确保执行脚本期间的原子性。因此，如果多个客户端同时执行相同的 Lua 脚本，只有一个客户端能够成功执行，其他客户端会失败并返回相应的错误信息。这样就保证了原子性。
      */
     public void testLock() {
+        String uuid = UUID.randomUUID().toString();
+        Boolean lock = distributedLock.tryLock("lock", uuid, 30);
+
+        if (lock) {
+            try {
+                // 查询 redis 中的 num 值
+                String number = redisTemplate.opsForValue().get("number");
+                // 没有该值设置默认值
+                if (StringUtils.isBlank(number)) {
+                    redisTemplate.opsForValue().set("number", "1");
+                }
+                // 有值转换成 int
+                int num = Integer.parseInt(number);
+                // 把 redis 中的 num 值 +1
+                redisTemplate.opsForValue().set("number", String.valueOf(++num));
+
+                testSubLock(uuid);
+
+            } finally {
+                distributedLock.unLock("lock", uuid);
+            }
+        }
+    }
+
+    public void testSubLock(String uuid) {
+        distributedLock.tryLock("lock", uuid, 30);
+        System.out.println("==========================");
+        distributedLock.unLock("lock", uuid);
+    }
+
+
+    public void testLock2() {
 
         String uuid = UUID.randomUUID().toString();
 
