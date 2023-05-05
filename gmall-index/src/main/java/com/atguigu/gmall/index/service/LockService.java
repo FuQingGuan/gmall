@@ -80,6 +80,13 @@ public class LockService {
      *                      redis 给 lua 脚本提供了一个类库: redis.call()
      *              Lua 脚本可以保证原子性，因为 Redis 在执行 Lua 脚本时，会将整个脚本作为一个整体执行，Redis 会将脚本编译成字节码，然后再在一个隔离的环境中运行。在这个运行环境中，脚本会被当作一个 Redis 命令来执行，且这个命令是以原子方式执行的，它要么全部执行成功，要么全部执行失败。
      *              在执行 Lua 脚本期间，Redis 会将脚本转换成一个 Redis 命令，并将其原子地发送到 Redis 服务器执行。在执行过程中，Redis 会禁止其他客户端对相同的 key 进行读写操作，以确保执行脚本期间的原子性。因此，如果多个客户端同时执行相同的 Lua 脚本，只有一个客户端能够成功执行，其他客户端会失败并返回相应的错误信息。这样就保证了原子性。
+     *
+     *          4. 自动续期: 定时器 + lua 脚本(需要判断是否是自己的锁)
+     *              A线程超时时间设为10s(为了解决死锁问题), 但代码执行时间可能需要30s, 然后 redis 服务端 10s 后将锁删除
+     *              此时, B线程恰好申请锁, redis 服务端不存在该锁, 可以申请, 也执行了代码
+     *              那么问题来了, A、B线程都同时获取到锁并执行业务逻辑, 这与分布式锁最基本的性质相违背：在任意一个时刻，只有一个客户端持有锁（即独享排他）
+     *
+     *                  判断是否是自己的锁, 是 则重制过期时间
      */
     public void testLock() {
         String uuid = UUID.randomUUID().toString();
@@ -98,7 +105,14 @@ public class LockService {
                 // 把 redis 中的 num 值 +1
                 redisTemplate.opsForValue().set("number", String.valueOf(++num));
 
-                testSubLock(uuid);
+//                testSubLock(uuid);
+
+                // 自动续期测试
+                try {
+                    TimeUnit.SECONDS.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
             } finally {
                 distributedLock.unLock("lock", uuid);

@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @Description: 分布式锁
@@ -71,6 +73,9 @@ public class DistributedLock {
             }
         }
 
+        // 自动续期
+        renewTime(lockName, uuid, expire);
+
         // 获取到锁, 返回true
         return true;
     }
@@ -117,5 +122,54 @@ public class DistributedLock {
         if (result == null) {
             throw new IllegalMonitorStateException("你释放的锁不属于你!");
         }
+    }
+
+    /**
+     * 锁延期
+     * 线程等待超时时间的2/3时间后,执行锁延时代码,直到业务逻辑执行完毕,因此在此过程中,其他线程无法获取到锁,保证了线程安全性
+     * @param lockName
+     * @param expire 单位：毫秒
+     */
+    private void renewTime(String lockName, String uuid, Integer expire){
+        String script = "if redis.call('hexists', KEYS[1], ARGV[1]) == 1 " +
+                "then " +
+                "   return redis.call('expire', KEYS[1], ARGV[2]) " +
+                "else " +
+                "   return 0 " +
+                "end";
+
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Boolean flag = redisTemplate.execute(new DefaultRedisScript<>(script, Boolean.class), Arrays.asList(lockName), uuid, expire.toString());
+
+                // 如果续期失败 锁对象已被删除
+                if (flag) {
+                    // 如果续期成功, 递归调用开启下一次续期
+                    renewTime(lockName, uuid, expire);
+                }
+            }
+        }, expire * 1000 / 3);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("定时任务的初始时间 " + System.currentTimeMillis());
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.out.println("定时器定时任务: " + System.currentTimeMillis());
+            }
+        },5000, 10000);
+
+        // 取消定时器
+//        new Timer().cancel();
+
+        // JUC 定时任务无法续期无法进行取消
+//        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(3);
+//        System.out.println("定时任务的初始时间 " + System.currentTimeMillis());
+        // 初始延迟 5 秒，以后每 10 秒执行一次
+//        scheduledExecutorService.scheduleAtFixedRate(() -> {
+//            System.out.println("juc 中的定时任务: " + System.currentTimeMillis());
+//        }, 5, 10, TimeUnit.SECONDS);
     }
 }
