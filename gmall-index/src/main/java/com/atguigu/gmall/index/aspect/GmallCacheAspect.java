@@ -8,6 +8,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,9 @@ public class GmallCacheAspect {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired
+    private RBloomFilter bloomFilter;
+
     /**
      * 自定义缓存注解不需要 指定特定返回值，特定包、特定类、特定方法特定形参列表
      * 可以使用 @annotation + 自定义注解的全类名进行对指定 注解进行增强
@@ -112,6 +116,16 @@ public class GmallCacheAspect {
         String key = keyPrefix + arg;
         // 组装 锁
         String lock = lockPrefix + arg;
+
+        /**
+         * 解决缓存穿透
+         *      在查询缓存 之前 查询布隆过滤器 判断数据是否存在，不存在则直接返回空。缓存都不需要查询了
+         */
+        if (!bloomFilter.contains(key)){
+            System.err.println("数据不存在, 直接返回");
+
+            return null;
+        }
 
         // 1. 查询缓存 如果缓存命中 则 直接返回
         String json = redisTemplate.opsForValue().get(key);
