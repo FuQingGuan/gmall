@@ -2,6 +2,8 @@ package com.atguigu.gmall.index.service;
 
 import com.atguigu.gmall.index.utils.DistributedLock;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -25,6 +27,9 @@ public class LockService {
 
     @Autowired
     private DistributedLock distributedLock;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     /**
      * 测试. 每次 将 number 值设置为 0 通过 ab 压测工具 ab -n 5000 -c 100 192.168.0.111:8888/index/test/lock 测试高并发下是否出现并发问题(number 未到 5000 即出现并发问题)
@@ -87,8 +92,30 @@ public class LockService {
      *              那么问题来了, A、B线程都同时获取到锁并执行业务逻辑, 这与分布式锁最基本的性质相违背：在任意一个时刻，只有一个客户端持有锁（即独享排他）
      *
      *                  判断是否是自己的锁, 是 则重制过期时间
+     *
+     *          单点故障 集群(主从): redLock 算法解决 Reddison
+     *              1. 客户端程序从主中获取到锁
+     *              2. 从还没有来得及同步数据, 主挂了
+     *              3. 从升级为新主
+     *              4. 其他客户端程序从新主中获取到锁. 导致锁机制失效
      */
     public void testLock() {
+        RLock lock = redissonClient.getLock("lock");
+        lock.lock();
+
+        try {
+            String number = redisTemplate.opsForValue().get("number");
+            if (StringUtils.isBlank(number)) {
+                redisTemplate.opsForValue().set("number", "1");
+            }
+            int num = Integer.parseInt(number);
+            redisTemplate.opsForValue().set("number", String.valueOf(++num));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void testLock3() {
         String uuid = UUID.randomUUID().toString();
         Boolean lock = distributedLock.tryLock("lock", uuid, 30);
 
