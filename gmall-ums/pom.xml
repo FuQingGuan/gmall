@@ -30,6 +30,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- ums 接口工程 -->
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>gmall-ums-interface</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <!-- openfeign -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
