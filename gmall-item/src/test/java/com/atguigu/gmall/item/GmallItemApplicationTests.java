@@ -5,6 +5,7 @@ import com.atguigu.gmall.item.feign.GmallPmsClient;
 import com.atguigu.gmall.pms.entity.BrandEntity;
 import com.atguigu.gmall.pms.entity.CategoryEntity;
 import com.atguigu.gmall.pms.entity.SkuEntity;
+import com.atguigu.gmall.pms.entity.SkuImagesEntity;
 import com.atguigu.gmall.pms.entity.SpuEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +53,14 @@ class GmallItemApplicationTests {
         SpuEntity spuEntity = spuEntityResponseVo.getData();
 
         System.out.println("spuEntity = " + spuEntity);
+    }
+
+    // 5. 根据 skuId 查询 sku 图片列表
+    @Test
+    public void test5() {
+        ResponseVo<List<SkuImagesEntity>> listResponseVo = pmsClient.querySkuImagesBySkuId(13L);
+        List<SkuImagesEntity> imagesEntities = listResponseVo.getData();
+
+        System.out.println("imagesEntities = " + imagesEntities);
     }
 }
