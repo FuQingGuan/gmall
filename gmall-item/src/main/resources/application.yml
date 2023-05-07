@@ -22,3 +22,8 @@ spring:
 feign: # feign
   sentinel:
     enabled: true # \u5F00\u542F feign \u7684 sentinel \u529F\u80FD
+threadPool: # \u7EBF\u7A0B\u6C60\u914D\u7F6E
+  corePoolSize: 8 # \u6838\u5FC3\u7EBF\u7A0B\u6570
+  maximumPoolSize: 16 # \u6700\u5927\u7EBF\u7A0B\u6570
+  keepAliveTime: 60 # \u751F\u5B58\u65F6\u95F4
+  blockQueueSize: 2000 # \u963B\u585E\u961F\u5217\u5927\u5C0F
