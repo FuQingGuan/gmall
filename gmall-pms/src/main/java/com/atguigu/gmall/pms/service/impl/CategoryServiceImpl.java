@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -175,6 +176,25 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, CategoryEnt
              */
             rabbitTemplate.convertAndSend("PMS_CATEGORY_EXCHANGE", "category.delete", key);
         }
+    }
+
+    @Override
+    public List<CategoryEntity> queryLvl123CategoriesByCid3(Long cid3) {
+
+        CategoryEntity categoryEntity3 = getById(cid3);
+
+        // 如果是乱输入 分类可能为空
+        if (categoryEntity3 == null) {
+            return null;
+        }
+
+        // 如果三级分类存在 二级分类一定存在
+        CategoryEntity categoryEntity2 = getById(categoryEntity3.getParentId());
+
+        // 一级分类
+        CategoryEntity categoryEntity = getById(categoryEntity2.getParentId());
+
+        return Arrays.asList(categoryEntity, categoryEntity2, categoryEntity3);
     }
 
 }
