@@ -43,7 +43,7 @@ public class ItemVo {
 
     private List<ItemSaleVo> sales; // 营销类型
 
-    private Boolean store; // 是否有货
+    private Boolean store = false; // 是否有货
 
     // [
     //      {attrId: 3, attrName: 机身颜色, attrValues: ['白天白', '暗夜黑']},
