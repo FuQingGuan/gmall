@@ -68,6 +68,7 @@ public class SkuController {
 
     /**
      * 信息
+     * 商品详情页 1. 根据 skuId 查询 sku
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
