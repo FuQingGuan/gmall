@@ -96,8 +96,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserEntity> impleme
         // 1. 根据登陆名查询用户
         UserEntity userEntity = getOne(
                 new LambdaQueryWrapper<UserEntity>()
-                        .eq(UserEntity::getUsername, loginName)
-                        .eq(UserEntity::getPhone, loginName)
+                        .eq(UserEntity::getUsername, loginName).or()
+                        .eq(UserEntity::getPhone, loginName).or()
                         .eq(UserEntity::getEmail, loginName)
         );
 
