@@ -43,3 +43,8 @@ mybatis-plus: # mybatis-plus \u914D\u7F6E
 logging: # \u67E5\u770B\u6267\u884C SQL
   level: # \u7EA7\u522B
     com.atguigu.gmall.cart: debug # debug \u6A21\u5F0F
+jwt:
+  cookieName: GMALL-TOKEN
+  pubKeyPath: /Users/admin/Documents/project/learn/gmall/gmall-auth/src/main/resources/rsa/rsa.pub
+  userKey: user-key
+  expire: 864000
