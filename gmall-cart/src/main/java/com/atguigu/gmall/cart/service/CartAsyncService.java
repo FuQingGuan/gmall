@@ -43,4 +43,13 @@ public class CartAsyncService {
                 new LambdaUpdateWrapper<Cart>().eq(Cart::getUserId, userId)
         );
     }
+
+    @Async
+    public void deleteByUserIdAndSkuId(String userId, Long skuId) {
+        cartMapper.delete(
+                new LambdaUpdateWrapper<Cart>()
+                        .eq(Cart::getUserId, userId)
+                        .eq(Cart::getSkuId, skuId)
+        );
+    }
 }

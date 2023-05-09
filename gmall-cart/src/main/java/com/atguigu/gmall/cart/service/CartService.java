@@ -320,4 +320,13 @@ public class CartService {
             asyncService.updateCart(userId, skuId, cart);
         }
     }
+
+    public void deleteCart(Long skuId) {
+        // 获取登陆状态
+        String userId = getUserId(); // 登陆 userId、未登陆 userKey
+        BoundHashOperations<String, Object, Object> hashOps = redisTemplate.boundHashOps(KEY_PREFIX + userId);
+
+        hashOps.delete(skuId.toString());
+        asyncService.deleteByUserIdAndSkuId(userId, skuId);
+    }
 }
