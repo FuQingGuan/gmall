@@ -285,4 +285,39 @@ public class CartService {
 
         return null;
     }
+
+    public void updateNum(Cart cart) {
+        // 获取登陆状态
+        String userId = getUserId(); // 登陆 userId、未登陆 userKey
+        BoundHashOperations<String, Object, Object> hashOps = redisTemplate.boundHashOps(KEY_PREFIX + userId);
+
+        String skuId = cart.getSkuId().toString();
+        BigDecimal count = cart.getCount();
+
+        if (hashOps.hasKey(skuId)) {
+            String cartJson = hashOps.get(skuId).toString();
+            cart = JSON.parseObject(cartJson, Cart.class);
+            cart.setCount(count);
+
+            hashOps.put(skuId, JSON.toJSONString(cart));
+            asyncService.updateCart(userId, skuId, cart);
+        }
+    }
+
+    public void updateStatus(Cart cart) {
+        // 获取登陆状态
+        String userId = getUserId(); // 登陆 userId、未登陆 userKey
+        BoundHashOperations<String, Object, Object> hashOps = redisTemplate.boundHashOps(KEY_PREFIX + userId);
+
+        String skuId = cart.getSkuId().toString();
+        Boolean check = cart.getCheck();
+        if (hashOps.hasKey(skuId)) {
+            String cartJson = hashOps.get(skuId).toString();
+            cart = JSON.parseObject(cartJson, Cart.class);
+            cart.setCheck(check);
+
+            hashOps.put(skuId, JSON.toJSONString(cart));
+            asyncService.updateCart(userId, skuId, cart);
+        }
+    }
 }
