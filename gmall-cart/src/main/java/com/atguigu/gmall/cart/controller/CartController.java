@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @Description:
@@ -22,6 +23,14 @@ public class CartController {
 
     @Autowired
     private CartService cartService;
+
+    @GetMapping("cart.html")
+    public String queryCarts(Model model) {
+        List<Cart> carts = cartService.queryCarts();
+
+        model.addAttribute("carts", carts);
+        return "cart";
+    }
 
     /**
      * 添加购物车成功, 重定向到购物车成功页

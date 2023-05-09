@@ -35,4 +35,12 @@ public class CartAsyncService {
     public void insertCart(Cart cart) {
         cartMapper.insert(cart);
     }
+
+    @Async
+    public void deleteByUserId(String userId) {
+//        System.out.println("执行到删除了");
+        cartMapper.delete(
+                new LambdaUpdateWrapper<Cart>().eq(Cart::getUserId, userId)
+        );
+    }
 }
