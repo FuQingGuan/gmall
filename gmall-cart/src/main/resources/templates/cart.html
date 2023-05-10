@@ -65,8 +65,9 @@
 									</div>
 								</li>
 								<li class="yui3-u-1-8">
-									<span class="price">{{cart.price}}</span>
-									<span class="price">{{cart.currentPrice}}</span>
+									新增价格: <span class="price"> {{cart.price}}</span>
+									<br>
+									<span v-if="cart.currentPrice" class="price" style="color: red;">实时价格：{{cart.currentPrice}}</span>
 								</li>
 								<li class="yui3-u-1-8">
 									<a href="javascript:void(0)" @click="decr(cart)" class="increment mins">-</a>

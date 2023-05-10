@@ -8,6 +8,7 @@ import com.atguigu.gmall.pms.service.SpuService;
 import com.atguigu.gmall.pms.vo.SpuVo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +35,9 @@ public class SpuController {
     // 注意在 Spring 中默认是 JDK 代理。 但是 Spring Boot 2.x 以及之后都是 CGLiB 代理 更加通用
     @Autowired
     private SpuService spuService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     /**
      * baseCrud: 4. 分页查询 spu 列表
@@ -119,6 +123,9 @@ public class SpuController {
     @ApiOperation("修改")
     public ResponseVo update(@RequestBody SpuEntity spu){
 		spuService.updateById(spu);
+
+        // 此处只是为了演示 购物车实时价格更新。修改 sku 表中的价格，然后找到对应的 spu 进行修改触发。例如修改 sku 25 的数据价格 为 6501，然后修改对应的 spu 15 的数据刷新购物车查看结果
+        rabbitTemplate.convertAndSend("PMS_SPU_EXCHANGE", "item.update", spu.getId()); // 新增、更新、删除 都是以 spu 为单位
 
         return ResponseVo.ok();
     }
