@@ -23,6 +23,10 @@ public class CartAsyncService {
     // 因为 注解是 基于 aop 的所以为了能让该注解生效我们应该注入代理类对象调用该方法
     @Async
     public void updateCart(String userId, String skuId, Cart cart) {
+
+        // 模拟异步更新购物车失败
+//        int i = 1 / 0;
+
         cartMapper.update(
                 cart, new LambdaUpdateWrapper<Cart>()
                         .eq(Cart::getUserId, userId)
@@ -32,7 +36,11 @@ public class CartAsyncService {
     }
 
     @Async
-    public void insertCart(Cart cart) {
+    public void insertCart(String userId, Cart cart) {
+
+        // 模拟异步新增购物车失败
+//        int i = 1 / 0;
+
         cartMapper.insert(cart);
     }
 
