@@ -44,6 +44,7 @@ public class SkuAttrValueController {
     }
 
     // 9. 根据 skuId 查询当前 sku 的销售属性
+    // order 4. 根据 skuId 查询当前 sku 的销售属性
     @GetMapping("sku/{skuId}")
     public ResponseVo<List<SkuAttrValueEntity>> querySaleAttrValuesBySkuId(@PathVariable("skuId") Long skuId) {
         List<SkuAttrValueEntity> skuAttrValueEntities = skuAttrValueService.list(
