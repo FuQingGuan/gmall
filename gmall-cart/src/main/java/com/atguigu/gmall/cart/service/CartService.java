@@ -305,7 +305,11 @@ public class CartService {
                         Cart cart = JSON.parseObject(cartJson.toString(), Cart.class);
                         // 查询实时价格
                         String currentPriceString = redisTemplate.opsForValue().get(PRICE_PREFIX + cart.getSkuId());
-                        cart.setCurrentPrice(new BigDecimal(currentPriceString));
+
+                        // 有则设置实时价格
+                        if (StringUtils.isNotBlank(currentPriceString)) {
+                            cart.setCurrentPrice(new BigDecimal(currentPriceString));
+                        }
 
                         return cart;
                     }

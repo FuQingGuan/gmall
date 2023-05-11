@@ -1,7 +1,32 @@
 package com.atguigu.gmall.order.service;
 
+import com.alibaba.nacos.common.utils.CollectionUtils;
+import com.atguigu.gmall.cart.pojo.Cart;
+import com.atguigu.gmall.common.bean.ResponseVo;
+import com.atguigu.gmall.common.exception.CartException;
+import com.atguigu.gmall.common.exception.OrderException;
+import com.atguigu.gmall.order.feign.GmallCartClient;
+import com.atguigu.gmall.order.feign.GmallPmsClient;
+import com.atguigu.gmall.order.feign.GmallSmsClient;
+import com.atguigu.gmall.order.feign.GmallUmsClient;
+import com.atguigu.gmall.order.feign.GmallWmsClient;
+import com.atguigu.gmall.order.interceptors.LoginInterceptor;
 import com.atguigu.gmall.order.pojo.OrderConfirmVo;
+import com.atguigu.gmall.order.pojo.OrderItemVo;
+import com.atguigu.gmall.order.pojo.UserInfo;
+import com.atguigu.gmall.pms.entity.SkuAttrValueEntity;
+import com.atguigu.gmall.pms.entity.SkuEntity;
+import com.atguigu.gmall.sms.vo.ItemSaleVo;
+import com.atguigu.gmall.ums.entity.UserAddressEntity;
+import com.atguigu.gmall.ums.entity.UserEntity;
+import com.atguigu.gmall.wms.entity.WareSkuEntity;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Description:
@@ -12,21 +37,104 @@ import org.springframework.stereotype.Service;
 @Service
 public class OrderService {
 
+    @Autowired
+    private GmallPmsClient pmsClient;
+
+    @Autowired
+    private GmallUmsClient umsClient;
+
+    @Autowired
+    private GmallWmsClient wmsClient;
+
+    @Autowired
+    private GmallSmsClient smsClient;
+
+    @Autowired
+    private GmallCartClient cartClient;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private final static String ORDER_PREFIX = "ORDER:TOKEN:";
+
     public OrderConfirmVo confirm() {
         OrderConfirmVo confirmVo = new OrderConfirmVo();
 
-        // 1. 根据当前用户的id 查询收货地址列表
-        // 2. 根据当前用户的id 查询已选中的购物车记录: skuId count(最后一次跟用户确认 其他字段应该从数据库实时获取)
-        // 3. 根据skuId查询sku
-        // 4. 根据skuId查询销售属性
-        // 5. 根据skuId查询营销信息
-        // 6. 根据skuId查询库存信息
-        // 7. 根据当前用户的id查询用户信息
+        UserInfo userInfo = LoginInterceptor.getUserInfo();
+        Long userId = userInfo.getUserId();
 
-        confirmVo.setAddresses(null);
-        confirmVo.setItems(null);
-        confirmVo.setBounds(null);
-        confirmVo.setOrderToken(null);
+        System.out.println("userId = " + userId);
+
+        // 1. 根据当前用户的id 查询收货地址列表
+        ResponseVo<List<UserAddressEntity>> addressesResponseVo = umsClient.queryAddressesByUserId(userId);
+        List<UserAddressEntity> addressEntities = addressesResponseVo.getData();
+        confirmVo.setAddresses(addressEntities);
+
+        // 2. 根据当前用户的id 查询已选中的购物车记录: skuId count(最后一次跟用户确认 其他字段应该从数据库实时获取)
+        ResponseVo<List<Cart>> cartsResponseVo = cartClient.queryCheckedCartsByUserId(userId);
+        List<Cart> carts = cartsResponseVo.getData();
+
+        if (CollectionUtils.isEmpty(carts)) {
+            throw new CartException("你没有选中的购物车");
+        }
+
+        // 把购物车集合转换成送货清单集合
+        List<OrderItemVo> items = carts.stream().map(cart -> {
+            OrderItemVo orderItemVo = new OrderItemVo();
+            orderItemVo.setSkuId(cart.getSkuId());
+            orderItemVo.setCount(cart.getCount());
+
+            // 3. 根据skuId查询sku
+            ResponseVo<SkuEntity> skuEntityResponseVo = pmsClient.querySkuById(cart.getSkuId());
+            SkuEntity skuEntity = skuEntityResponseVo.getData();
+
+            if (skuEntity == null) {
+                throw new OrderException("你要下单的商品不存在");
+            }
+
+            orderItemVo.setTitle(skuEntity.getTitle());
+            orderItemVo.setPrice(skuEntity.getPrice());
+            orderItemVo.setWeight(skuEntity.getWeight());
+            orderItemVo.setDefaultImage(skuEntity.getDefaultImage());
+
+            // 4. 根据skuId查询销售属性
+            ResponseVo<List<SkuAttrValueEntity>> saleAttrResponseVo = pmsClient.querySaleAttrValuesBySkuId(cart.getSkuId());
+            List<SkuAttrValueEntity> skuAttrValueEntities = saleAttrResponseVo.getData();
+            orderItemVo.setSaleAttrs(skuAttrValueEntities);
+
+            // 5. 根据skuId查询营销信息
+            ResponseVo<List<ItemSaleVo>> salesResponseVo = smsClient.querySalesBySkuId(cart.getSkuId());
+            List<ItemSaleVo> itemSaleVos = salesResponseVo.getData();
+            orderItemVo.setSales(itemSaleVos);
+
+            // 6. 根据skuId查询库存信息
+            ResponseVo<List<WareSkuEntity>> wareSkuResponseVo = wmsClient.queryWareSkusBySkuId(skuEntity.getId());
+            List<WareSkuEntity> wareSkuEntities = wareSkuResponseVo.getData();
+            if (CollectionUtils.isNotEmpty(wareSkuEntities)) {
+                orderItemVo.setStore(
+                        wareSkuEntities.stream().anyMatch(wareSkuEntity -> wareSkuEntity.getStock() - wareSkuEntity.getStockLocked() > 0)
+                );
+            }
+
+            return orderItemVo;
+        }).collect(Collectors.toList());
+
+        confirmVo.setItems(items);
+
+        // 7. 根据当前用户的 id 查询用户信息
+        ResponseVo<UserEntity> userEntityResponseVo = umsClient.queryUserById(userId);
+        UserEntity userEntity = userEntityResponseVo.getData();
+
+        if (userEntity != null) {
+            confirmVo.setBounds(userEntity.getIntegration());
+        }
+
+        // 防重唯一标识, 页面上 / redis
+        String orderToken = IdWorker.getIdStr();
+        confirmVo.setOrderToken(orderToken);
+
+        redisTemplate.opsForValue().set(ORDER_PREFIX + orderToken, orderToken);
 
         return confirmVo;
     }
