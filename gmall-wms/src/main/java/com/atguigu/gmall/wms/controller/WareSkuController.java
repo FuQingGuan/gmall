@@ -37,6 +37,7 @@ public class WareSkuController {
      * baseCrud: 6. 根据 skuId 查询对应的 sku 库存信息
      * es 数据导入 提供远程接口, 3. 根据 skuId 查询对应的 sku 库存信息
      * 商品详情页 7. 根据 skuId 查询 sku 的库存信息
+     * order 5. 根据skuId查询营销信息
      *
      * 　请求路径
      * 　　　　http://api.gmall.com/wms/waresku/sku/1
