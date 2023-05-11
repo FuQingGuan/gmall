@@ -65,6 +65,13 @@ spring:
           predicates: # 断言
             - Host=cart.gmall.com # 域名进行路由
 
+        - id: order-route # 订单路由
+          uri: lb://order-service # 路由唯一标识, 商品详情页工程路由
+          predicates: # 断言
+            - Host=order.gmall.com # 域名进行路由
+          filters:
+            - Auth=/ # 支付订单需要进行拦截
+
 jwt:
   cookieName: GMALL-TOKEN
   token: token
