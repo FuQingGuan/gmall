@@ -93,6 +93,7 @@ public class UserController {
 
     /**
      * 信息
+     * order 7. 根据当前用户的id查询用户信息
      */
     @GetMapping("{id}")
     @ApiOperation("详情查询")
