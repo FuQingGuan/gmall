@@ -1,5 +1,8 @@
 server:
   port: 18092 # \u670D\u52A1\u7AEF\u53E3\u53F7
+  error: # 开启异常信息相应给前段
+    include-exception: true
+    include-message: always
 spring:
   cloud:
     nacos:
