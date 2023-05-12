@@ -30,6 +30,27 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- oms 接口工程 -->
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>gmall-oms-interface</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- pms 接口工程 -->
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>gmall-pms-interface</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- sms 接口工程 -->
+        <dependency>
+            <groupId>com.atguigu</groupId>
+            <artifactId>gmall-sms-interface</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
         <!-- openfeign -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
