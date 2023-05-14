@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,9 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuMapper, WareSkuEntity
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     private WareSkuMapper wareSkuMapper;
@@ -77,6 +81,12 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuMapper, WareSkuEntity
 
         // 把库存的锁定信息保存到 redis 中，以方便将来解锁库存(用户下单不支付, 或者支付成功减库存)。订单编号作为 key，锁定商品作为 value
         redisTemplate.opsForValue().set(KEY_PREFIX + orderToken, JSON.toJSONString(lockVos), 26, TimeUnit.HOURS); // 注意 24 小时不支持就会自动关单 过期时间不得低于 24 小时
+
+        /**
+         * 发送延迟消息, 定时解锁库存
+         *      此处延迟时间需要大于关单时间. 不能出现订单还未关闭库存先解锁
+         */
+        rabbitTemplate.convertAndSend("ORDER_EXCHANGE", "stock.ttl", orderToken);
 
         // 如果验库存并锁库存成功, 返回 null
         return null;

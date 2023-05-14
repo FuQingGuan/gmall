@@ -212,6 +212,21 @@ public class OrderService {
             throw new OrderException("手慢了，商品库存不足：" + JSON.toJSONString(skuLockVos));
         }
 
+        /**
+         * 定时解锁库存
+         *      当代码执行到此处 服务器发生宕机. 没有机会执行到创建订单代码 订单更不可能执行失败. 此时库存就会锁死
+         *          库存锁死带来的危害：店家商品卖不出，买家无法购买的情况
+         *
+         *          什么时候发送延迟消息: 锁定库存与发送消息一定要保证原子性
+         *
+         *              order: 库存锁定成功后发送, 库存锁定失败直接抛出异常.
+         *                  库存锁定成功，服务器宕机 依然存在上述问题
+         *
+         *              wms: 验库存锁库存时放到同一个事物中
+         *                  事物具备原子性, 验库存锁库存成功就可以发送延迟消息. 定时解锁库存
+         */
+        int i = 1 / 0; // 模拟服务器还没来得及创建订单, 就挂了
+
         // 4. 创建订单
         UserInfo userInfo = LoginInterceptor.getUserInfo();
         Long userId = userInfo.getUserId();
