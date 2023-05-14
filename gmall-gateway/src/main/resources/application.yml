@@ -72,6 +72,13 @@ spring:
           filters:
             - Auth=/ # 支付订单需要进行拦截
 
+        - id: payment-route # 支付路由
+          uri: lb://payment-service # 路由唯一标识, 商品详情页工程路由
+          predicates: # 断言
+            - Host=payment.gmall.com # 域名进行路由
+          filters:
+            - Auth=/
+
 jwt:
   cookieName: GMALL-TOKEN
   token: token

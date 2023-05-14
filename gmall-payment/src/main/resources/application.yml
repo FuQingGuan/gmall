@@ -1,0 +1,54 @@
+server:
+  port: 18093 # \u670D\u52A1\u7AEF\u53E3\u53F7
+  error: # \u5F00\u542F\u5F02\u5E38\u4FE1\u606F\u76F8\u5E94\u7ED9\u524D\u6BB5
+    include-exception: true
+    include-message: always
+spring:
+  cloud:
+    nacos:
+      discovery: # \u6CE8\u518C\u4E2D\u5FC3\u914D\u7F6E
+        server-addr: 192.168.0.101:8848 # nacos \u6CE8\u518C\u4E2D\u5FC3\u5730\u5740
+    sentinel: # \u9650\u6D41\u914D\u7F6E
+      transport:
+        dashboard: 192.168.0.101:8080 # sentinel \u5BA2\u6237\u7AEF\u5730\u5740
+        port: 8719 # \u670D\u52A1\u4E0E dashboard \u8FDB\u884C\u4EA4\u4E92\u7684\u7AEF\u53E3
+  zipkin: # \u94FE\u8DEF\u8FFD\u8E2A\u914D\u7F6E
+    base-url: http://192.168.0.101:9411 # zipkin \u5730\u5740
+    discovery-client-enabled: false # \u662F\u5426\u76D1\u63A7 zipkin \u672C\u8EAB\u7684\u8BF7\u6C42
+    sender:
+      type: web # \u94FE\u8DEF\u6570\u636E\u4EE5\u4EC0\u4E48\u65B9\u5F0F\u8FD4\u9001\u7ED9 zipkin. web \u4F7F\u7528 http \u7684\u5F62\u5F0F\u53D1\u9001
+  sleuth: # \u91C7\u96C6\u7387\u914D\u7F6E
+    sampler:
+      probability: 1 # \u91C7\u96C6\u7387, \u9ED8\u8BA4\u662F \u767E\u5206\u4E4B10 \u751F\u4EA7\u65F6\u4F7F\u7528, \u5F00\u53D1\u5E94\u8BE5\u8BBE\u7F6E\u4E3A 1 \u91C7\u96C6\u5168\u90E8\u8BF7\u6C42
+  thymeleaf:
+    cache: false
+  redis: # Redis
+    host: 192.168.0.101
+  datasource: # MySQL
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.0.101:3306/guli_payment?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai # \u8FDE\u63A5\u534F\u8BAE
+    username: root
+    password: root
+  rabbitmq:
+    host: 192.168.0.101
+    port: 5672
+    virtual-host: /admin # \u865A\u62DF\u4E3B\u673A
+    username: admin
+    password: admin
+    # \u751F\u4EA7\u8005\u786E\u8BA4\u7C7B\u578B
+    #   none - \u4E0D\u786E\u8BA4\u6A21\u5F0F
+    #   simple - \u540C\u6B65\u963B\u585E\u65B9\u5F0F\u786E\u8BA4, \u6027\u80FD\u4E0D\u9AD8(\u7B49\u5230\u6B7B\u4E3A\u6B62, \u5E76\u53D1\u4E0D\u8FC7\u767E\u53EF\u4EE5\u4F7F\u7528. \u53EF\u9760\u6027\u8F83\u9AD8)
+    #   correlated - \u5F02\u6B65\u975E\u963B\u585E\u65B9\u5F0F\u786E\u8BA4, \u6027\u80FD\u8F83\u9AD8
+    publisher-confirm-type: correlated
+    # \u786E\u8BA4\u6D88\u606F\u662F\u5426\u5230\u8FBE\u961F\u5217
+    publisher-returns: true
+feign: # feign
+  sentinel:
+    enabled: true # \u5F00\u542F feign \u7684 sentinel \u529F\u80FD
+mybatis-plus: # mybatis-plus \u914D\u7F6E
+  global-config:
+    db-config:
+      id-type: auto # id \u7B56\u7565, \u751F\u4EA7\u5E94\u8BE5\u4F7F\u7528\u5206\u5E03\u5F0F id. auto \u6570\u636E\u5E93\u81EA\u589E
+logging: # \u67E5\u770B\u6267\u884C SQL
+  level: # \u7EA7\u522B
+    com.atguigu.gmall.payment: debug # debug \u6A21\u5F0F

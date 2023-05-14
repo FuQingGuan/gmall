@@ -225,7 +225,7 @@ public class OrderService {
          *              wms: 验库存锁库存时放到同一个事物中
          *                  事物具备原子性, 验库存锁库存成功就可以发送延迟消息. 定时解锁库存
          */
-        int i = 1 / 0; // 模拟服务器还没来得及创建订单, 就挂了
+//        int i = 1 / 0; // 模拟服务器还没来得及创建订单, 就挂了
 
         // 4. 创建订单
         UserInfo userInfo = LoginInterceptor.getUserInfo();
