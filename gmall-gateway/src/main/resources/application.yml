@@ -79,6 +79,11 @@ spring:
           filters:
             - Auth=/
 
+        - id: payment-route2 # 首页的异步请求路由
+          uri: lb://payment-service # 路由到那里, 路由到服务名对应的服务
+          predicates: # 断言
+            - Path=/pay/** # 什么样的请求到此路由 进而进入路由该服务. pay 开头的请求 都 路由到 index-payment 服务
+
 jwt:
   cookieName: GMALL-TOKEN
   token: token
