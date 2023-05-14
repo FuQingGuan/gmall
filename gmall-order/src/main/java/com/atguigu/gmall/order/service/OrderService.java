@@ -217,6 +217,26 @@ public class OrderService {
         Long userId = userInfo.getUserId();
         try {
             omsClient.saveOrder(submitVo, userId);
+
+            /**
+             * 定时关单：订单创建成功, 发送消息给延迟队列，定时关单
+             *      创建订单成功, 用户一直不支付. 库存也会锁死.
+             *          库存锁死带来的危害：店家商品卖不出，买家无法购买的情况
+             *
+             *      解决办法
+             *          利用定时任务轮询数据库
+             *              消耗系统内存，增加了数据库的压力，存在较大的时间误差
+             *          rabbitmq的延时队列和死信队列结合
+             *
+             *      发送 orderToken, 根据 orderToken 把 orderToken 对应的订单更新为关闭状态.
+             *      关闭成功 发送给 wms, wms 根据 orderToken 获取锁定信息解锁库存
+             *
+             *      测试定时关单
+             *          在 oms OrderListener closeOrder() 更新订单状态为关闭状态 处打断点
+             *          在 wms StockListener unlock() 中打断点
+             */
+            rabbitTemplate.convertAndSend("ORDER_EXCHANGE", "order.ttl", orderToken);
+
         } catch (Exception e) {
             e.printStackTrace();
             // TODO: 发送消息给 wms 解锁库存

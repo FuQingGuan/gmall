@@ -1,4 +1,4 @@
-package com.atguigu.gmall.order.config;
+package com.atguigu.gmall.oms.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.Queue;
@@ -13,7 +13,7 @@ import javax.annotation.PostConstruct;
 /**
  * @Description:
  * @Author: Guan FuQing
- * @Date: 2023/5/13 04:37
+ * @Date: 2023/5/13 23:20
  * @Email: moumouguan@gmail.com
  */
 @Configuration // 声明该类是一个配置类
@@ -42,7 +42,6 @@ public class RabbitConfig {
         );
     }
 
-
     /**
      * 定时关单操作流程
      *      创建订单成功发送消息给交换机, 通过交换机转发消息给延迟队列. 这个队列会有定的延迟时间.
@@ -58,7 +57,7 @@ public class RabbitConfig {
      */
     @Bean
     public Queue ttlQueue() {
-        // 返回一个持久化 生存时间是 90 秒的延迟队列(单位是毫秒)
+        // 返回一个持久化 生存时间是 90 秒的延迟队列(单位是浩渺)
         return QueueBuilder.durable("ORDER_TTL_QUEUE")
                 .ttl(90000)
                 // 时间到了经过那个死信交换机进入那个死信队列
