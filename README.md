@@ -27,3 +27,10 @@
 ## 电商
 
 ![](https://oss.yiki.tech/img/202304260132904.png)
+
+## 各个阶段开发环境 与 代码分享
+
+```shell
+链接: https://pan.baidu.com/s/1ceEvGrQ-Re--1Rf6mmxwAQ?pwd=asdf 提取码: asdf 
+```
+
